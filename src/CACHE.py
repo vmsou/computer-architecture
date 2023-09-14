@@ -214,7 +214,7 @@ class DirectMappedCache(Cache):
     def is_cache_hit(self, addr: int) -> bool:
         """ Checks whether address is within cache lines """
         block_addr: BlockAddress = BlockAddress.from_bits(addr, self.k, self.m)
-        line_num: int = block_addr.s % self.m
+        line_num: int = block_addr.r
         #print("BLOCK NUM:", block_addr.s)
         #print("LINE NUM:", line_num)
         if line_num >= len(self.lines):
@@ -224,7 +224,7 @@ class DirectMappedCache(Cache):
 
     def copy_cache_line_to_ram(self, block_addr: BlockAddress) -> None:
         """ If cache line is modified, copies line to main memory. """
-        line_num: int = block_addr.s % self.m
+        line_num: int = block_addr.r
         line: CacheLine = self.lines[line_num]
         if not line.modif: return
         
@@ -237,7 +237,7 @@ class DirectMappedCache(Cache):
 
     def copy_ram_line_to_cache(self, block_addr: BlockAddress):
         """ Reserves cache line for block. """
-        line_num: int = block_addr.s % self.m
+        line_num: int = block_addr.r
         # print("COPYING BLOCK", block_addr.s, "TO LINE", line_num)
         line: CacheLine = self.lines[line_num]
         line.tag = block_addr.t
