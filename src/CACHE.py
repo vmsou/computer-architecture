@@ -145,6 +145,14 @@ class BlockAddress:
     
     def __int__(self) -> int:
         return int(repr(self).replace(" ", ""), 2)
+    
+    @property
+    def start_addr(self) -> int:
+        return self.s * self.k
+    
+    @property
+    def end_addr(self) -> int:
+        return self.start_addr + self.k
 
     @classmethod
     def from_bits(cls, addr: int, k: int, m: int) -> 'BlockAddress':
@@ -227,8 +235,11 @@ class DirectMappedCache(Cache):
         line_num: int = block_addr.r
         line: CacheLine = self.lines[line_num]
         if not line.modif: return
+
+        old_block = BlockAddress(line.tag, block_addr.r, 0, self.k, self.m)
+        print(f"L{block_addr.r}->[{old_block.start_addr}..{old_block.end_addr - 1}] | ", end='')
         
-        start_addr: int = block_addr.s * self.k
+        start_addr: int = block_addr.start_addr
         for i in range(self.k):
             word = line.words[i]
             self.ram.write(start_addr + i, word)
@@ -238,22 +249,22 @@ class DirectMappedCache(Cache):
     def copy_ram_line_to_cache(self, block_addr: BlockAddress):
         """ Reserves cache line for block. """
         line_num: int = block_addr.r
-        # print("COPYING BLOCK", block_addr.s, "TO LINE", line_num)
         line: CacheLine = self.lines[line_num]
         line.tag = block_addr.t
-        start_addr: int = block_addr.s * self.k
-        # print("START ADDR:", start_addr)
+        start_addr: int = block_addr.start_addr
+
         for i in range(self.k):
             line.words[i] = self.ram.read(start_addr + i)
+
+        print(f"[{start_addr}..{block_addr.end_addr - 1}]->L{block_addr.r}")
 
     def read(self, addr: int) -> int:
         block_addr = BlockAddress.from_bits(addr, self.k, self.m)
         if not self.is_cache_hit(addr):
-            print("READ MISS:", repr(block_addr), f"({int(block_addr)})")
+            print(f"MISS: {addr} ", end='')
             self.copy_cache_line_to_ram(block_addr)
             self.copy_ram_line_to_cache(block_addr)
-        else:
-            print("READ HIT:", repr(block_addr), f"({int(block_addr)})")
+        
         line: CacheLine = self.lines[block_addr.r]
         return line.words[block_addr.w]
 
@@ -261,11 +272,12 @@ class DirectMappedCache(Cache):
         block_addr = BlockAddress.from_bits(addr, self.k, self.m)
         
         if not self.is_cache_hit(addr):
-            print("WRITE MISS:", repr(block_addr), f"({int(block_addr)})")
+            print(f"MISS: {addr} ", end='')
             self.copy_cache_line_to_ram(block_addr)
             self.copy_ram_line_to_cache(block_addr)
         else:
-            print("WRITE HIT:", repr(block_addr), f"({int(block_addr)})")
+            # print("WRITE HIT:", repr(block_addr), f"({int(block_addr)})")
+            ...
         
         line: CacheLine = self.lines[block_addr.r]
         line.modif = True

@@ -35,7 +35,7 @@ class CPU:
         self.C = 1
         while self.A <= self.B:
             self.mem.write(self.A, self.C)
-            self.io.write(f"> {self.A} = {self.C}\n")
+            self.io.write(f"   > {self.A} = {self.C}\n")
             self.C += 1
             self.A += 1
             
