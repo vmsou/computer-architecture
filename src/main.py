@@ -33,6 +33,18 @@ def test2() -> None:
     for num, line in enumerate(cache.lines):
         print(f"{bin(num)[2:]} {None if line.tag is None else bin(line.tag)[2:]}: {line.words}")
 
+def autoria() -> None:
+    io = IO(sys.stdin, sys.stdout)
+    ram = RAM(22)
+    cache = DirectMappedCache(4 * 2**10, 16, ram)
+    cpu = CPU(cache, io)
+
+    addrs = [10, 20, 15, 30, 65, 35, 45, 25, 60, 50]
+
+    for addr in addrs:
+        value = cache.read(addr)
+        # print(addr, value)
+
 def main() -> None:
     io = IO(sys.stdin, sys.stdout)
     ram = RAM(22)
@@ -58,5 +70,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
-    # test()
+    autoria()
